@@ -7,3 +7,28 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
+
+ROOM_MAPPING = {
+  single: {
+    sleeps: 1,
+    number_of_rooms: 2,
+    price: 30
+  },
+  double: {
+    sleeps: 2,
+    number_of_rooms: 3,
+    price: 50
+  },
+  family: {
+    sleeps: 4,
+    number_of_rooms: 1,
+    price: 85
+  },
+}
+
+Room.room_type.values.each do |room_type|
+  Room.find_or_create_by!(
+    room_type:,
+    **ROOM_MAPPING[room_type.to_sym]
+  )
+end

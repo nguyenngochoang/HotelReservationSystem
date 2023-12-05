@@ -101,6 +101,8 @@ GEM
       reline (>= 0.3.1)
     drb (2.2.0)
       ruby2_keywords
+    enumerize (2.7.0)
+      activesupport (>= 3.2)
     error_highlight (0.5.1)
     erubi (1.12.0)
     globalid (1.2.1)
@@ -250,6 +252,7 @@ DEPENDENCIES
   bootsnap
   capybara
   debug
+  enumerize
   error_highlight (>= 0.4.0)
   importmap-rails
   jbuilder
