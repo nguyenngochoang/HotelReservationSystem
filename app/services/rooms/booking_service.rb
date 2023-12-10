@@ -4,68 +4,58 @@ module Rooms
       @number_of_guests = number_of_guests
       @rooms = Room.all.order(sleeps: :desc).to_a
       @final_result = []
-      # @combinations = find_combinations
+      @option_no = 0
     end
 
     def self.call(number_of_guests:)
       new(number_of_guests: number_of_guests).room_booking
     end
 
+    def find_booking_options
+      options = []
+      (1..rooms.size).each do |n|
+        combinations = rooms.repeated_combination(n).to_a
+        combinations.select! do |c|
+          total_sleeps = c.map(&:sleeps).sum
+          total_sleeps == number_of_guests
+        end
+        next if combinations.empty?
+
+        inspect_options(combinations)
+        best_combination = min_by_price(combinations)
+        options << best_combination
+      end
+      options
+    end
+
+    def min_by_price(options)
+      options.min_by do |c|
+        c.map(&:price).sum
+      end
+    end
+
+    def inspect_options(combinations)
+      combinations.each_with_index do |option, index|
+        @option_no += 1
+        puts "Option #{@option_no}:"
+        option.each do |room|
+          puts "Room type: #{room.room_type}, Sleeps: #{room.sleeps}, Price: $#{room.price}"
+        end
+        total_price = option.map(&:price).sum
+        puts "Total price: $#{total_price}"
+      end
+    end
+
     def room_booking
-      find_options(start: 0, remaining_guests: number_of_guests, result: {})
+      cheapest_options = min_by_price(find_booking_options)
 
-      final_result.each_with_index do |result, index|
-        puts "Option #{index + 1}:"
-        room_name = ""
-        total_money = 0
-
-        result.each do |key, value|
-          room_name += key.room_type_text + " "
-          total_money += key.price * value
-        end
-        puts "#{room_name} - #{total_money}"
-      end
-
-      room_name = ""
-      total_money = 0
-
-      cheapest_option = final_result.min_by do |x|
-        x.sum{|key,value| key.price * value}
-      end
-
-      cheapest_option.each do |key, value|
-        room_name += key.room_type_text + " "
-        total_money += key.price * value
-      end
-
-      "#{room_name} - #{total_money}"
+      cheapest_options.reduce(["", 0]) do |acc, room|
+        acc[0] += "#{room.room_type} " unless acc[0].include?(room.room_type)
+        acc[1] += room.price
+        acc
+      end.join(" - ")
     end
 
-
-    def find_options(start:, remaining_guests:, result:)
-      return if start >= rooms.size
-
-      maximum_capacity = rooms[start..].sum{|x| x.sleeps * x.number_of_rooms}
-      return "No option" if remaining_guests > maximum_capacity
-
-      rooms[start..].each do |room|
-        next if room.sleeps > remaining_guests
-
-        result[room] = 0
-        while remaining_guests >= room.sleeps && result[room] < room.sleeps * room.number_of_rooms
-          result[room] += 1
-          remaining_guests -= room.sleeps
-        end
-      end
-
-      if remaining_guests <= 0
-        final_result << result unless final_result.include?(result)
-        find_options(start: start + 1, remaining_guests: number_of_guests, result: {})
-      else
-        find_options(start: start + 1, remaining_guests: remaining_guests, result: result)
-      end
-      final_result
-    end
 
     private
 
