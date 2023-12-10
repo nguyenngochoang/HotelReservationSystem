@@ -13,11 +13,11 @@ module Rooms
 
     def find_booking_options
       options = []
-      (1..rooms.size).each do |n|
+      (1..number_of_guests).each do |n|
         combinations = rooms.repeated_combination(n).to_a
         combinations.select! do |c|
           total_sleeps = c.map(&:sleeps).sum
-          total_sleeps == number_of_guests
+          total_sleeps == number_of_guests && valid_combination(c).all?
         end
         next if combinations.empty?
 
@@ -26,6 +26,12 @@ module Rooms
         options << best_combination
       end
       options
+    end
+
+    def valid_combination(combination)
+      combination.tally.map do |key, value|
+        value <= key.number_of_rooms ? true : false
+      end
     end
 
     def min_by_price(options)
@@ -48,6 +54,7 @@ module Rooms
 
     def room_booking
       cheapest_options = min_by_price(find_booking_options)
+      return "No options" if cheapest_options.nil?
 
       cheapest_options.reduce(["", 0]) do |acc, room|
         acc[0] += "#{room.room_type} " unless acc[0].include?(room.room_type)
@@ -55,7 +62,6 @@ module Rooms
         acc
       end.join(" - ")
     end
-
 
     private
 
